@@ -37,6 +37,27 @@ def get_memory_info() -> dict:
     }
 
 
+def get_network_info() -> list[dict]:
+    """Lee /proc/net/dev para obtener estadísticas de tráfico por interfaz."""
+    interfaces = []
+    with open("/proc/net/dev", "r") as f:
+        lineas = f.readlines()[2:]  # las primeras 2 líneas son encabezados
+
+    for linea in lineas:
+        nombre, datos = linea.split(":")
+        campos = datos.split()
+        interfaces.append({
+            "nombre_interfaz": nombre.strip(),
+            "bytes_recibidos": int(campos[0]),
+            "paquetes_recibidos": int(campos[1]),
+            "bytes_enviados": int(campos[8]),
+            "paquetes_enviados": int(campos[9]),
+        })
+
+    return interfaces
+
+
 if __name__ == "__main__":
     print("CPU:", get_cpu_info())
     print("Memoria:", get_memory_info())
+    print("Red:", get_network_info())

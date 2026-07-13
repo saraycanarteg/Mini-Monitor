@@ -2,8 +2,8 @@ from textual.app import App, ComposeResult
 from textual.widgets import Header, Footer, Static, DataTable
 from textual.containers import Container
 
-from system.procfs_reader import get_cpu_info, get_memory_info
-
+from src.system.procfs_reader import get_cpu_info, get_memory_info, get_network_info
+from src.system.shell_executor import get_disk_info, get_processes, get_connected_users
 
 class MiniMonitorApp(App):
     """Aplicación TUI para el Mini Monitor de Recursos."""
@@ -20,6 +20,7 @@ class MiniMonitorApp(App):
         yield Footer()
 
     def on_mount(self) -> None:
+        self.theme = "rose-pine-dawn"
         tabla = self.query_one("#tabla_resumen", DataTable)
         tabla.add_columns("Recurso", "Valor")
         tabla.add_row("CPU - Núcleos", "-", key="cpu_nucleos")
@@ -28,6 +29,11 @@ class MiniMonitorApp(App):
         tabla.add_row("Memoria Total (KB)", "-", key="mem_total")
         tabla.add_row("Memoria Usada (KB)", "-", key="mem_usada")
         tabla.add_row("Memoria Libre (KB)", "-", key="mem_libre")
+        tabla.add_row("Disco Total (KB)", "-", key="disco_total")
+        tabla.add_row("Disco Usado (KB)", "-", key="disco_usado")
+        tabla.add_row("Disco Libre (KB)", "-", key="disco_libre")
+        tabla.add_row("Procesos Activos", "-", key="num_procesos")
+        tabla.add_row("Usuarios Conectados", "-", key="num_usuarios")
 
         self.actualizar_datos()
         # Refresca automáticamente cada 2 segundos
@@ -35,17 +41,25 @@ class MiniMonitorApp(App):
 
     def actualizar_datos(self) -> None:
         tabla = self.query_one("#tabla_resumen", DataTable)
+        columna_valor = tabla.ordered_columns[1].key
 
         cpu = get_cpu_info()
         mem = get_memory_info()
+        disco = get_disk_info()
+        procesos = get_processes()
+        usuarios = get_connected_users()
 
-        # column_index=1 -> segunda columna ("Valor")
-        tabla.update_cell("cpu_nucleos", tabla.ordered_columns[1].key, str(cpu["nucleos"]))
-        tabla.update_cell("cpu_freq", tabla.ordered_columns[1].key, f"{cpu['frecuencia_mhz']:.1f}")
-        tabla.update_cell("cpu_carga", tabla.ordered_columns[1].key, str(cpu["carga_1min"]))
-        tabla.update_cell("mem_total", tabla.ordered_columns[1].key, str(mem["mem_total_kb"]))
-        tabla.update_cell("mem_usada", tabla.ordered_columns[1].key, str(mem["mem_usada_kb"]))
-        tabla.update_cell("mem_libre", tabla.ordered_columns[1].key, str(mem["mem_libre_kb"]))
+        tabla.update_cell("cpu_nucleos", columna_valor, str(cpu["nucleos"]))
+        tabla.update_cell("cpu_freq", columna_valor, f"{cpu['frecuencia_mhz']:.1f}")
+        tabla.update_cell("cpu_carga", columna_valor, str(cpu["carga_1min"]))
+        tabla.update_cell("mem_total", columna_valor, str(mem["mem_total_kb"]))
+        tabla.update_cell("mem_usada", columna_valor, str(mem["mem_usada_kb"]))
+        tabla.update_cell("mem_libre", columna_valor, str(mem["mem_libre_kb"]))
+        tabla.update_cell("disco_total", columna_valor, str(disco["disco_total_kb"]))
+        tabla.update_cell("disco_usado", columna_valor, str(disco["disco_usado_kb"]))
+        tabla.update_cell("disco_libre", columna_valor, str(disco["disco_libre_kb"]))
+        tabla.update_cell("num_procesos", columna_valor, str(len(procesos)))
+        tabla.update_cell("num_usuarios", columna_valor, str(len(usuarios)))
 
     def action_refresh_data(self) -> None:
         self.actualizar_datos()
