@@ -1,0 +1,31 @@
+Screen {
+    background: $surface;
+}
+
+#titulo {
+    content-align: center middle;
+    text-style: bold;
+    color: $accent;
+    background: $panel;
+    height: 3;
+    border: heavy $accent;
+    margin: 1 2;
+}
+
+#tabla_resumen {
+    margin: 1 2;
+    border: round $primary;
+    height: auto;
+}
+
+DataTable > .datatable--header {
+    background: $primary;
+    color: $text;
+    text-style: bold;
+}
+
+DataTable > .datatable--cursor {
+    background: $accent;
+    color: $text;
+    text-style: bold;
+}
