@@ -18,6 +18,14 @@ Screen {
     height: auto;
 }
 
+TabbedContent {
+    margin: 1 2;
+}
+
+Tab {
+    text-style: bold;
+}
+
 DataTable > .datatable--header {
     background: $primary;
     color: $text;
