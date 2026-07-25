@@ -37,3 +37,14 @@ DataTable > .datatable--cursor {
     color: $text;
     text-style: bold;
 }
+ModalCrear, ModalEditar {
+    align: center middle;
+}
+
+#modal_crear_box, #modal_editar_box {
+    width: 60;
+    height: auto;
+    border: heavy $accent;
+    background: $panel;
+    padding: 1 2;
+}

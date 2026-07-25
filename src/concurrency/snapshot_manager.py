@@ -1,20 +1,18 @@
 import os
 import threading
 
-from src.system.procfs_reader import get_cpu_info, get_memory_info, get_network_info
-from src.system.shell_executor import get_disk_info, get_processes, get_connected_users
+from src.services.sistema_service import obtener_estado_cpu, obtener_estado_memoria, obtener_estado_disco, obtener_procesos_activos, obtener_usuarios_conectados, obtener_estado_red
 from src.repositories.monitoreo_repository import crear_monitoreo
-
 
 def _capturar_con_hilos() -> dict:
     """Lee CPU y memoria en paralelo usando threading, y el resto de forma secuencial."""
     resultados = {}
 
     def leer_cpu():
-        resultados["cpu"] = get_cpu_info()
+        resultados["cpu"] = obtener_estado_cpu()
 
     def leer_memoria():
-        resultados["mem"] = get_memory_info()
+        resultados["mem"] = obtener_estado_memoria()
 
     hilo_cpu = threading.Thread(target=leer_cpu)
     hilo_mem = threading.Thread(target=leer_memoria)
@@ -24,11 +22,10 @@ def _capturar_con_hilos() -> dict:
     hilo_cpu.join()
     hilo_mem.join()
 
-    # Estos no necesitan paralelizarse; son rápidos y usan subprocess de todas formas
-    resultados["disco"] = get_disk_info()
-    resultados["procesos"] = get_processes()
-    resultados["usuarios"] = get_connected_users()
-    resultados["red"] = get_network_info()
+    resultados["disco"] = obtener_estado_disco()
+    resultados["procesos"] = obtener_procesos_activos()
+    resultados["usuarios"] = obtener_usuarios_conectados()
+    resultados["red"] = obtener_estado_red()
 
     return resultados
 
