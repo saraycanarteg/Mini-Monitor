@@ -35,6 +35,21 @@ def get_processes() -> list[dict]:
     return procesos
 
 
+def get_network_ips() -> dict:
+    """Ejecuta 'ip' para obtener la dirección IPv4 asociada a cada interfaz de red."""
+    resultado = subprocess.run(
+        ["ip", "-4", "-o", "addr", "show"], capture_output=True, text=True
+    )
+    ips = {}
+    for linea in resultado.stdout.strip().split("\n"):
+        campos = linea.split()
+        if len(campos) >= 4:
+            nombre_interfaz = campos[1]
+            direccion_ip = campos[3].split("/")[0]
+            ips[nombre_interfaz] = direccion_ip
+    return ips
+
+
 def get_connected_users() -> list[dict]:
     """Ejecuta 'who' para listar usuarios conectados y su tiempo de conexión."""
     resultado = subprocess.run(["who"], capture_output=True, text=True)

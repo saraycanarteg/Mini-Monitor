@@ -8,7 +8,7 @@ saber si el dato viene de /proc o de un comando de shell.
 """
 
 from src.system.procfs_reader import get_cpu_info, get_memory_info, get_network_info
-from src.system.shell_executor import get_disk_info, get_processes, get_connected_users
+from src.system.shell_executor import get_disk_info, get_processes, get_connected_users, get_network_ips
 
 
 def obtener_estado_cpu() -> dict:
@@ -37,8 +37,12 @@ def obtener_usuarios_conectados() -> list[dict]:
 
 
 def obtener_estado_red() -> list[dict]:
-    """Servicio de Red: estadísticas de tráfico por interfaz."""
-    return get_network_info()
+    """Servicio de Red: dirección IP y estadísticas de tráfico por interfaz."""
+    interfaces = get_network_info()
+    ips = get_network_ips()
+    for interfaz in interfaces:
+        interfaz["direccion_ip"] = ips.get(interfaz["nombre_interfaz"], "N/A")
+    return interfaces
 
 
 def obtener_estado_completo_sistema() -> dict:

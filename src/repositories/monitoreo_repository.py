@@ -25,7 +25,7 @@ def crear_monitoreo(cpu: dict, mem: dict, disco: dict, procesos: list, usuarios:
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         datetime.now().isoformat(timespec="seconds"),
-        cpu["nucleos"], cpu["frecuencia_mhz"], cpu.get("carga_1min", 0.0),
+        cpu["nucleos"], cpu["frecuencia_mhz"], cpu.get("uso_porcentaje", 0.0),
         mem["mem_total_kb"], mem["mem_usada_kb"], mem["mem_libre_kb"],
         mem.get("swap_total_kb", 0), mem.get("swap_total_kb", 0) - mem.get("swap_libre_kb", 0),
         disco["disco_total_kb"], disco["disco_usado_kb"], disco["disco_libre_kb"],
@@ -47,11 +47,11 @@ def crear_monitoreo(cpu: dict, mem: dict, disco: dict, procesos: list, usuarios:
 
     for i in interfaces:
         cur.execute("""
-            INSERT INTO interfaces_red (monitoreo_id, nombre_interfaz, bytes_recibidos, bytes_enviados,
-                                         paquetes_recibidos, paquetes_enviados)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (monitoreo_id, i["nombre_interfaz"], i["bytes_recibidos"], i["bytes_enviados"],
-              i["paquetes_recibidos"], i["paquetes_enviados"]))
+            INSERT INTO interfaces_red (monitoreo_id, nombre_interfaz, direccion_ip, bytes_recibidos,
+                                         bytes_enviados, paquetes_recibidos, paquetes_enviados)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (monitoreo_id, i["nombre_interfaz"], i.get("direccion_ip", "N/A"), i["bytes_recibidos"],
+              i["bytes_enviados"], i["paquetes_recibidos"], i["paquetes_enviados"]))
 
     conn.commit()
     conn.close()

@@ -1,5 +1,21 @@
+_ultima_muestra_cpu: tuple[int, int] | None = None  # (jiffies_ocupados, jiffies_totales) de la lectura anterior
+
+
+def _leer_jiffies_cpu() -> tuple[int, int]:
+    """Lee la línea agregada 'cpu' de /proc/stat y devuelve (jiffies_ocupados, jiffies_totales)."""
+    with open("/proc/stat", "r") as f:
+        campos = f.readline().split()[1:]  # descarta la etiqueta "cpu"
+
+    valores = [int(v) for v in campos]
+    ocioso = valores[3] + valores[4]  # idle + iowait
+    total = sum(valores)
+    return total - ocioso, total
+
+
 def get_cpu_info() -> dict:
-    """Lee /proc/cpuinfo y /proc/loadavg para obtener núcleos, frecuencia y uso."""
+    """Lee /proc/cpuinfo, /proc/loadavg y /proc/stat para núcleos, frecuencia, carga y % de uso real."""
+    global _ultima_muestra_cpu
+
     nucleos = 0
     frecuencia = 0.0
 
@@ -13,10 +29,23 @@ def get_cpu_info() -> dict:
     with open("/proc/loadavg", "r") as f:
         carga_1min = float(f.read().split()[0])
 
+    # % de uso real: delta de jiffies ocupados vs. totales entre esta lectura y la anterior.
+    # Al ser una medición incremental (no bloqueante) requiere al menos dos llamadas para
+    # dar un valor distinto de 0; esto evita frenar la interfaz con un time.sleep().
+    ocupado, total = _leer_jiffies_cpu()
+    uso_porcentaje = 0.0
+    if _ultima_muestra_cpu is not None:
+        ocupado_prev, total_prev = _ultima_muestra_cpu
+        delta_total = total - total_prev
+        if delta_total > 0:
+            uso_porcentaje = max(0.0, min(100.0, (ocupado - ocupado_prev) / delta_total * 100))
+    _ultima_muestra_cpu = (ocupado, total)
+
     return {
         "nucleos": nucleos,
         "frecuencia_mhz": frecuencia,
-        "carga_1min": carga_1min
+        "carga_1min": carga_1min,
+        "uso_porcentaje": round(uso_porcentaje, 1),
     }
 
 

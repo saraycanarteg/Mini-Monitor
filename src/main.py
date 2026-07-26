@@ -101,6 +101,7 @@ class MiniMonitorApp(App):
         tabla.add_columns("Recurso", "Valor")
         tabla.add_row("CPU - Núcleos", "-", key="cpu_nucleos")
         tabla.add_row("CPU - Frecuencia (MHz)", "-", key="cpu_freq")
+        tabla.add_row("CPU - Uso (%)", "-", key="cpu_uso")
         tabla.add_row("CPU - Carga (1 min)", "-", key="cpu_carga")
         tabla.add_row("Memoria Total (KB)", "-", key="mem_total")
         tabla.add_row("Memoria Usada (KB)", "-", key="mem_usada")
@@ -111,7 +112,7 @@ class MiniMonitorApp(App):
 
         self.query_one("#tabla_procesos", DataTable).add_columns("PID", "Nombre", "Estado", "Usuario")
         self.query_one("#tabla_usuarios", DataTable).add_columns("Usuario", "Tiempo de conexión")
-        self.query_one("#tabla_red", DataTable).add_columns("Interfaz", "Bytes Recibidos", "Bytes Enviados")
+        self.query_one("#tabla_red", DataTable).add_columns("Interfaz", "IP", "Bytes Recibidos", "Bytes Enviados")
 
         tabla_h = self.query_one("#tabla_historial", DataTable)
         tabla_h.add_columns("ID", "Fecha", "CPU %", "Mem Usada KB", "Comentario", "Etiqueta")
@@ -137,6 +138,7 @@ class MiniMonitorApp(App):
 
         tabla.update_cell("cpu_nucleos", columna_valor, str(cpu["nucleos"]))
         tabla.update_cell("cpu_freq", columna_valor, f"{cpu['frecuencia_mhz']:.1f}")
+        tabla.update_cell("cpu_uso", columna_valor, f"{cpu['uso_porcentaje']:.1f}")
         tabla.update_cell("cpu_carga", columna_valor, str(cpu["carga_1min"]))
         tabla.update_cell("mem_total", columna_valor, str(mem["mem_total_kb"]))
         tabla.update_cell("mem_usada", columna_valor, str(mem["mem_usada_kb"]))
@@ -161,7 +163,10 @@ class MiniMonitorApp(App):
         tabla = self.query_one("#tabla_red", DataTable)
         tabla.clear()
         for iface in obtener_estado_red():
-            tabla.add_row(iface["nombre_interfaz"], str(iface["bytes_recibidos"]), str(iface["bytes_enviados"]))
+            tabla.add_row(
+                iface["nombre_interfaz"], iface["direccion_ip"],
+                str(iface["bytes_recibidos"]), str(iface["bytes_enviados"])
+            )
 
     def actualizar_historial(self) -> None:
         tabla = self.query_one("#tabla_historial", DataTable)
