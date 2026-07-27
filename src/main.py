@@ -8,7 +8,7 @@ from src.services.sistema_service import (
     obtener_procesos_activos, obtener_usuarios_conectados, obtener_estado_red
 )
 from src.repositories.monitoreo_repository import (
-    listar_monitoreos, actualizar_comentario_etiqueta, eliminar_monitoreo
+    listar_monitoreos, actualizar_comentario_etiqueta, eliminar_monitoreo, obtener_monitoreo
 )
 from src.concurrency.snapshot_manager import crear_snapshot_en_proceso_hijo
 
@@ -67,6 +67,40 @@ class ModalEditar(ModalScreen):
             self.dismiss(None)
 
 
+class ModalDetalles(ModalScreen):
+    """Muestra la información detallada de una captura."""
+
+    def __init__(self, detalle: dict):
+        super().__init__()
+        self.detalle = detalle
+
+    def compose(self) -> ComposeResult:
+        yield Vertical(
+            Label("Detalles Completos de la Captura", id="titulo_detalles_principal"),
+            Static(f"ID: {self.detalle['id']}  |  Fecha: {self.detalle['fecha_hora']}\n", classes="detalle-texto"),
+            
+            Label("────────── CPU ──────────", classes="titulo-seccion"),
+            Static(f"Núcleos: {self.detalle['cpu_nucleos']} | Frecuencia: {self.detalle['cpu_frecuencia_mhz']:.1f} MHz | Uso CPU: {self.detalle['cpu_uso_porcentaje']:.1f}%\n", classes="detalle-texto"),
+            
+            Label("──────── MEMORIA ────────", classes="titulo-seccion"),
+            Static(f"Memoria Total: {self.detalle['mem_total_kb']} KB | Memoria Usada: {self.detalle['mem_usada_kb']} KB | Memoria Libre: {self.detalle['mem_libre_kb']} KB\n"
+                   f"Swap Total: {self.detalle['swap_total_kb']} KB | Swap Usada: {self.detalle['swap_usada_kb']} KB\n", classes="detalle-texto"),
+            
+            Label("───────── DISCO ─────────", classes="titulo-seccion"),
+            Static(f"Disco Total: {self.detalle['disco_total_kb']} KB | Disco Usado: {self.detalle['disco_usado_kb']} KB | Disco Libre: {self.detalle['disco_libre_kb']} KB\n", classes="detalle-texto"),
+            
+            Label("──────── EXTRAS ─────────", classes="titulo-seccion"),
+            Static(f"Comentario: {self.detalle['comentario'] or '-'}\n"
+                   f"Etiqueta: {self.detalle['etiqueta'] or '-'}\n", classes="detalle-texto"),
+            
+            Button("Cerrar", id="btn_cerrar", variant="primary"),
+            id="modal_detalles_box",
+        )
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        self.dismiss()
+
+
 class MiniMonitorApp(App):
     """Aplicación TUI para el Mini Monitor de Recursos."""
 
@@ -74,6 +108,7 @@ class MiniMonitorApp(App):
     BINDINGS = [
         ("q", "quit", "Salir"),
         ("r", "refresh_data", "Refrescar"),
+        ("v", "ver_detalles", "Ver detalles"),
         ("c", "crear_captura", "Crear captura"),
         ("e", "editar_captura", "Editar"),
         ("d", "eliminar_captura", "Eliminar"),
@@ -222,6 +257,20 @@ class MiniMonitorApp(App):
         eliminar_monitoreo(monitoreo_id)
         self.actualizar_historial()
         self.notify(f"Captura #{monitoreo_id} eliminada.")
+
+    def action_ver_detalles(self) -> None:
+        tabla = self.query_one("#tabla_historial", DataTable)
+        if tabla.cursor_row is None or tabla.row_count == 0:
+            self.notify("Selecciona una captura en Historial primero.", severity="warning")
+            return
+
+        fila_key, _ = tabla.coordinate_to_cell_key(tabla.cursor_coordinate)
+        monitoreo_id = int(fila_key.value)
+        detalle = obtener_monitoreo(monitoreo_id)
+        if detalle:
+            self.push_screen(ModalDetalles(detalle))
+        else:
+            self.notify("No se encontró el detalle de la captura.", severity="error")
 
 
 if __name__ == "__main__":

@@ -37,7 +37,7 @@ DataTable > .datatable--cursor {
     color: $text;
     text-style: bold;
 }
-ModalCrear, ModalEditar {
+ModalCrear, ModalEditar, ModalDetalles {
     align: center middle;
 }
 
@@ -47,4 +47,33 @@ ModalCrear, ModalEditar {
     border: heavy $accent;
     background: $panel;
     padding: 1 2;
+}
+
+#modal_detalles_box {
+    width: 80;
+    height: auto;
+    border: heavy $accent;
+    background: $panel;
+    padding: 1 2;
+    align: center middle;
+}
+
+#titulo_detalles_principal {
+    content-align: center middle;
+    text-style: bold;
+    color: $accent;
+    width: 100%;
+    margin-bottom: 1;
+}
+
+.titulo-seccion {
+    content-align: center middle;
+    text-style: bold;
+    color: $primary;
+    width: 100%;
+}
+
+.detalle-texto {
+    content-align: center middle;
+    width: 100%;
 }
